@@ -29,10 +29,13 @@ async def login(code: str, redirect_uri: str, db: Session = Depends(get_db)):
         user_info = user_info_with_token(token)
 
         new_user = CreateUser(
-            id=user_info["sub"],
-            username=user_info["username"],
-            email=user_info["email"],
+            id=user_info["UserAttributes"][4]["Value"],
+            given_name=user_info["UserAttributes"][3]["Value"],
+            family_name=user_info["UserAttributes"][2]["Value"],
+            username=user_info["Username"],
+            email=user_info["UserAttributes"][0]["Value"],
         )
+
         if not (
             db.query(User).filter(User.username == new_user.username).first()
             or db.query(User).filter(User.email == new_user.email).first()

@@ -12,6 +12,8 @@ class User(Base):
     __tablename__ = "user"
 
     id = Column(String(50), primary_key=True, index=True)
+    given_name = Column(String(200), index=True, nullable=False)
+    family_name = Column(String(200), index=True, nullable=False)
     username = Column(String(200), unique=True, index=True, nullable=False)
     email = Column(String(200), unique=True, index=True, nullable=False)
     is_active = Column(Integer, index=True, default=True, nullable=False)
@@ -34,6 +36,8 @@ def save_user(new_user: CreateUser, db: Session = Depends(get_db)):
 
     db_user = User(
         id=new_user.id,
+        given_name=new_user.given_name,
+        family_name=new_user.family_name,
         username=new_user.username,
         email=new_user.email,
         is_active=False,

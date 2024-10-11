@@ -61,15 +61,10 @@ def auth_with_code(code: str, redirect_uri: str):
 
 def user_info_with_token(access_token: str):
 
-    response = requests.get(
-        f"https://703671939478-iap-es.auth.eu-north-1.amazoncognito.com//oauth2/userInfo",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
+    response = cognito_client.get_user(AccessToken=access_token)
 
-    user_info = response.json()
-
-    if response.status_code == 200:
-        return user_info
+    if response.get("ResponseMetadata").get("HTTPStatusCode") == 200:
+        return response
     else:
-        print(f"Error: {response.status_code}, {response.text}")
+        print(f"Error: Error getting user info: {response}")
         return None
