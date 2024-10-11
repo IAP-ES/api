@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from db.create_database import create_tables
 from db.database import SessionLocal
+from routers import auth
 
 
 @asynccontextmanager
@@ -39,6 +40,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(auth.router)
 
 
 @app.middleware("http")

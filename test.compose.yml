@@ -21,7 +21,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=mysql+pymysql://mysql:${MYSQL_USER}@${MYSQL_PASSWORD}/${MYSQL_DATABASE}
+      - MYSQL_URL=mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}
     volumes:
       - .:/api
     depends_on:
