@@ -1,5 +1,6 @@
 from db.database import engine
+from models.user import User
 
 
 def create_tables():
-    return
+    User.metadata.create_all(bind=engine)
