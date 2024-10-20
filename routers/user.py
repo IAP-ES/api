@@ -2,12 +2,14 @@ import os
 import logging
 from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 from pydantic import BaseModel, Field
+from typing import Optional
 
 from db.database import get_db
-from auth.auth import jwks
+from auth.auth import jwks, get_current_user
 from auth.JWTBearer import JWTBearer
 from auth.user_auth import auth_with_code, user_info_with_token
 from crud.user import create_user, get_user_by_username, get_user_by_email
@@ -87,4 +89,56 @@ async def signin(request: SignInRequest, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred during sign-in. Please try again later.",
+        )
+
+
+@router.get(
+    "/auth/me",
+    dependencies=[Depends(auth)],
+    response_model=dict,
+    status_code=status.HTTP_200_OK,
+)
+async def get_current_user_info(
+    current_username: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns the authenticated user's information.
+
+    This function uses the authentication system to retrieve the current user's
+    username and fetches the corresponding user details from the database.
+
+    :param current_username: The username of the currently authenticated user.
+    :param db: Database session to query user details.
+    :return: A JSON object containing the user's details if found.
+    :raises HTTPException: If the user is not found in the database.
+    """
+
+    try:
+        # Retrieve user details from the database using the username
+        user = get_user_by_username(user_username=current_username, db=db)
+        # If the user does not exist, raise an HTTPException
+        if not user:
+            logging.error(f"User '{current_username}' not found in the database.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found."
+            )
+
+        # Return the user details as JSON
+        return JSONResponse(
+            status_code=status.HTTP_200_OK, content=jsonable_encoder(user)
+        )
+
+    except HTTPException as http_exc:
+        # Re-raise the HTTP exception for the FastAPI exception handler
+        raise http_exc
+
+    except Exception as e:
+        # Log unexpected errors and raise a 500 error for the client
+        logging.exception(
+            f"An unexpected error occurred while retrieving user info for '{current_username}'."
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while retrieving the user information. Please try again later.",
         )
