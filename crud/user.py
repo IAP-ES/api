@@ -14,7 +14,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     :param ticket: Ticket to create
     :return: Ticket created
     """
-    user_db = UserModel(**user.dict())
+    user_db = UserModel(**user.model_dump())
     db.add(user_db)
     db.commit()
     db.refresh(user_db)

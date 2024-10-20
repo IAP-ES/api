@@ -79,6 +79,9 @@ async def signin(request: SignInRequest, db: Session = Depends(get_db)):
             content={"token": token, "message": "Login successful."},
         )
 
+    except HTTPException as http_exc:
+        # Re-raise HTTP exceptions to maintain the status code
+        raise http_exc
     except Exception as e:
         logging.exception("Unexpected error occurred during sign-in process.")
         raise HTTPException(
