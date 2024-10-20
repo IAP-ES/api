@@ -84,7 +84,7 @@ async def signin(request: SignInRequest, db: Session = Depends(get_db)):
     except HTTPException as http_exc:
         # Re-raise HTTP exceptions to maintain the status code
         raise http_exc
-    except Exception as e:
+    except Exception:
         logging.exception("Unexpected error occurred during sign-in process.")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -133,7 +133,7 @@ async def get_current_user_info(
         # Re-raise the HTTP exception for the FastAPI exception handler
         raise http_exc
 
-    except Exception as e:
+    except Exception:
         # Log unexpected errors and raise a 500 error for the client
         logging.exception(
             f"An unexpected error occurred while retrieving user info for '{current_username}'."
