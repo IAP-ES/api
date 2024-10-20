@@ -4,8 +4,13 @@ from dotenv import load_dotenv
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 from sqlalchemy.orm import Session
+
 from db.database import get_db
 from main import app
+from auth.JWTBearer import JWTAuthorizationCredentials
+from auth.auth import JWTBearer
+from routers.user import auth
+from auth.auth import get_current_user
 
 load_dotenv()
 COGNITO_REDIRECT_URI = os.environ.get("COGNITO_REDIRECT_URI")
@@ -81,7 +86,6 @@ def test_successful_login_with_valid_credentials_found_email(
     mock_db.query.return_value.filter.return_value.first.side_effect = [False, True]
 
     response = client.post("/auth/signin", json={"code": "valid_code"})
-
     assert response.status_code == 200
     assert response.json() == {
         "token": {"token": "valid_token", "expires_in": 100},
@@ -137,3 +141,75 @@ def test_successful_login_with_valid_credentials_new_user(
 
     # Verificar se create_user foi chamado, indicando que um novo usuário foi criado
     # mock_create_user.assert_called_once()  # Isto deve passar agora
+    app.dependency_overrides = {}
+
+
+credentials = JWTAuthorizationCredentials(
+    jwt_token="token",
+    header={"kid": "some_kid"},
+    claims={"sub": "user_id"},
+    signature="signature",
+    message="message",
+)
+
+
+@patch("routers.user.get_user_by_username", return_value=user_attributes)
+@patch.object(JWTBearer, "__call__", return_value=credentials)
+def test_get_current_user_success(
+    mock_get_user_by_username,
+    mock_verify_token_revoed,
+):
+    app.dependency_overrides[auth] = lambda: credentials
+    app.dependency_overrides[get_current_user] = lambda: "username1"
+
+    headers = {"Authorization": "Bearer token"}
+    response = client.get(
+        "/auth/me",
+        headers=headers,  # Removing unnecessary args in the query string
+    )
+
+    print(response.json())
+    # Verifies the status of the response is 200
+    assert response.status_code == 200
+    # Verifies the response contains user attributes
+    assert response.json() == user_attributes
+
+    app.dependency_overrides = {}
+
+
+@patch("routers.user.get_user_by_username", return_value=None)  # Usuário não encontrado
+@patch.object(JWTBearer, "__call__", return_value=credentials)
+def test_get_current_user_not_found(
+    mock_get_user_by_username, mock_verify_token_revoed
+):
+    app.dependency_overrides[auth] = lambda: credentials
+    app.dependency_overrides[get_current_user] = lambda: "username1"
+
+    headers = {"Authorization": "Bearer token"}
+    response = client.get("/auth/me", headers=headers)
+
+    # Verifica se a resposta retorna 404
+    assert response.status_code == 404
+    assert response.json() == {"detail": "User not found."}
+
+    app.dependency_overrides = {}
+
+
+@patch("routers.user.get_user_by_username", side_effect=Exception("Unexpected error"))
+@patch.object(JWTBearer, "__call__", return_value=credentials)
+def test_get_current_user_unexpected_error(
+    mock_get_user_by_username, mock_verify_token_revoed
+):
+    app.dependency_overrides[auth] = lambda: credentials
+    app.dependency_overrides[get_current_user] = lambda: "username1"
+
+    headers = {"Authorization": "Bearer token"}
+    response = client.get("/auth/me", headers=headers)
+
+    # Verifica se a resposta retorna 500
+    assert response.status_code == 500
+    assert response.json() == {
+        "detail": "An error occurred while retrieving the user information. Please try again later."
+    }
+
+    app.dependency_overrides = {}
