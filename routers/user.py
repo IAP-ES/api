@@ -6,13 +6,16 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 from pydantic import BaseModel, Field
-from typing import Optional
 
 from db.database import get_db
 from auth.auth import jwks, get_current_user
-from auth.JWTBearer import JWTBearer
-from auth.user_auth import auth_with_code, user_info_with_token
-from crud.user import create_user, get_user_by_username, get_user_by_email
+from auth.JWTBearer import JWTBearer, JWTAuthorizationCredentials
+from auth.user_auth import auth_with_code, user_info_with_token, logout_with_token
+from crud.user import (
+    create_user,
+    get_user_by_username,
+    get_user_by_email,
+)
 from schemas.user import UserCreate
 
 load_dotenv()
@@ -141,4 +144,49 @@ async def get_current_user_info(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while retrieving the user information. Please try again later.",
+        )
+
+
+@router.get("/auth/logout", response_model=dict, status_code=status.HTTP_200_OK)
+async def logout(credentials: JWTAuthorizationCredentials = Depends(auth)):
+    """
+    Logout the authenticated user by revoking their access token.
+
+    This endpoint logs out the user by invalidating their access token using Amazon Cognito's
+    `global_sign_out` function. The token is provided in the `Authorization` header as part of
+    the request's JWT credentials.
+
+    :param credentials: JWTAuthorizationCredentials object that contains the access token.
+    :return: JSON response confirming the logout action if successful.
+    :raises HTTPException: If the logout process fails.
+    """
+    try:
+        # Attempt to log out by revoking the user's token
+        result = logout_with_token(credentials.jwt_token)
+
+        # If the logout process succeeds, return a success message
+        if result:
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content={"message": "Logout successful."},
+            )
+        else:
+            # If logout fails for any reason, raise an HTTP 400 error with a descriptive message
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to log out. Please try again.",
+            )
+
+    except HTTPException as http_exc:
+        # Re-raise the HTTP exception for the FastAPI exception handler
+        raise http_exc
+
+    except Exception:
+        # Log the exception for debugging purposes
+        logging.exception("An unexpected error occurred during the logout process.")
+
+        # Return a generic HTTP 500 error if something unexpected occurs
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An internal server error occurred during logout. Please try again later.",
         )

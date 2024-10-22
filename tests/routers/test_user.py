@@ -213,3 +213,47 @@ def test_get_current_user_unexpected_error(
     }
 
     app.dependency_overrides = {}
+
+
+@patch("routers.user.logout_with_token", return_value=True)
+@patch.object(JWTBearer, "__call__", return_value=credentials)
+def test_successful_logout(mock_jwt_bearer, mock_logout_with_token):
+    """
+    Testa o logout bem-sucedido do usuário.
+    """
+    headers = {"Authorization": "Bearer token"}
+    response = client.get("/auth/logout", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json() == {"message": "Logout successful."}
+    mock_logout_with_token.assert_called_once_with("token")
+
+
+@patch("routers.user.logout_with_token", return_value=False)
+@patch.object(JWTBearer, "__call__", return_value=credentials)
+def test_unsuccessful_logout(mock_jwt_bearer, mock_logout_with_token):
+    """
+    Testa a falha ao fazer logout.
+    """
+    headers = {"Authorization": "Bearer token"}
+    response = client.get("/auth/logout", headers=headers)
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Failed to log out. Please try again."}
+    mock_logout_with_token.assert_called_once_with("token")
+
+
+@patch("routers.user.logout_with_token", side_effect=Exception("Unexpected error"))
+@patch.object(JWTBearer, "__call__", return_value=credentials)
+def test_logout_unexpected_error(mock_jwt_bearer, mock_logout_with_token):
+    """
+    Testa um erro inesperado durante o processo de logout.
+    """
+    headers = {"Authorization": "Bearer token"}
+    response = client.get("/auth/logout", headers=headers)
+
+    assert response.status_code == 500
+    assert response.json() == {
+        "detail": "An internal server error occurred during logout. Please try again later."
+    }
+    mock_logout_with_token.assert_called_once_with("token")

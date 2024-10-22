@@ -4,11 +4,7 @@ import pytest
 import logging
 from unittest.mock import patch
 
-from main import app
-from auth.user_auth import auth_with_code, user_info_with_token
-from auth.auth import get_current_user
-from routers.user import auth
-from auth.JWTBearer import JWTAuthorizationCredentials
+from auth.user_auth import auth_with_code, user_info_with_token, logout_with_token
 
 # Configuração do logger
 logging.basicConfig(level=logging.INFO)
@@ -142,3 +138,72 @@ def test_unsuccessful_user_info_with_token(mock_cognito_client_get_user_function
 
     # Como o status da resposta simulada é 400, o resultado esperado é None
     assert result is None
+
+
+# Testes para a função logout_with_token
+
+
+# Teste de sucesso ao realizar o logout com um token válido
+@patch(
+    "auth.user_auth.cognito_client.global_sign_out",
+    return_value={"ResponseMetadata": {"HTTPStatusCode": 200}},
+)
+def test_successful_logout_with_token(mock_cognito_client_global_sign_out_function):
+    """
+    Testa se o logout ocorre corretamente quando um token válido é fornecido.
+    """
+
+    # Executa a função com um token válido
+    result = logout_with_token("valid_access_token")
+
+    # Verifica se o método global_sign_out do cognito_client foi chamado com o token correto
+    mock_cognito_client_global_sign_out_function.assert_called_once_with(
+        AccessToken="valid_access_token"
+    )
+
+    # O resultado esperado é True quando o logout é bem-sucedido
+    assert result is True
+
+
+# Teste de falha ao realizar o logout com um token inválido (código de status 400)
+@patch(
+    "auth.user_auth.cognito_client.global_sign_out",
+    return_value={"ResponseMetadata": {"HTTPStatusCode": 400}},
+)
+def test_unsuccessful_logout_with_token(mock_cognito_client_global_sign_out_function):
+    """
+    Testa se a função retorna False quando falha ao realizar o logout com um token inválido.
+    """
+
+    # Executa a função com um token inválido
+    result = logout_with_token("invalid_access_token")
+
+    # Verifica se o método global_sign_out do cognito_client foi chamado com o token correto
+    mock_cognito_client_global_sign_out_function.assert_called_once_with(
+        AccessToken="invalid_access_token"
+    )
+
+    # Como o status da resposta simulada é 400, o resultado esperado é False
+    assert result is False
+
+
+# Teste para exceções inesperadas durante o logout
+@patch(
+    "auth.user_auth.cognito_client.global_sign_out",
+    side_effect=Exception("Unexpected error occurred"),
+)
+def test_exception_during_logout(mock_cognito_client_global_sign_out_function):
+    """
+    Testa se a função lida corretamente com exceções inesperadas durante o logout.
+    """
+
+    # Executa a função que deve gerar uma exceção
+    result = logout_with_token("access_token_with_error")
+
+    # Verifica se o método global_sign_out foi chamado
+    mock_cognito_client_global_sign_out_function.assert_called_once_with(
+        AccessToken="access_token_with_error"
+    )
+
+    # Como ocorreu uma exceção, o resultado esperado é False
+    assert result is False
