@@ -1,5 +1,5 @@
 import os
-
+import logging
 import boto3
 import requests
 import base64
@@ -70,3 +70,31 @@ def user_info_with_token(access_token: str):
     else:
         print(f"Error: Error getting user info: {response}")
         return None
+
+
+def logout_with_token(access_token: str) -> bool:
+    """
+    Logout the user by revoking the access token using Amazon Cognito's global sign-out process.
+
+    This function invalidates the user's session by revoking their access token.
+    It uses Cognito's `global_sign_out` method to log out the user from all devices.
+
+    :param access_token: The access token that needs to be revoked for logging out the user.
+    :return: True if the logout process is successful, False otherwise.
+    """
+    try:
+        # Attempt to revoke the access token using the global sign-out method
+        response = cognito_client.global_sign_out(AccessToken=access_token)
+
+        # Check the response metadata to confirm if the request was successful
+        if response.get("ResponseMetadata", {}).get("HTTPStatusCode") == 200:
+            return True  # Return True if the logout was successful
+        else:
+            # Log an error message with details from the response
+            logging.error(f"Error logging out: {response}")
+            return False  # Return False if the logout process failed
+
+    except Exception:
+        # Log any unexpected exceptions that occur during the logout process
+        logging.exception("An unexpected error occurred during logout.")
+        return False  # Return False if an exception occurs
