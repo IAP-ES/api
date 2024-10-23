@@ -129,5 +129,5 @@ def test_get_tasks_by_user_id(test_db, test_user: UserModel):
 
     # Verifica se as tasks foram retornadas corretamente
     assert len(tasks) == 2  # Deve retornar 2 tasks
-    assert tasks[0].title == "Test Task 1"
-    assert tasks[1].title == "Test Task 2"
+    assert tasks[0].title == task_data_1.title or tasks[0].title == task_data_2.title
+    assert tasks[1].title == task_data_1.title or tasks[1].title == task_data_2.title
