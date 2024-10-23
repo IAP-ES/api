@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 
 from db.database import get_db
-from crud.task import create_task, get_tasks_by_user_id, update_task, delete_task
+from crud.task import create_task, get_tasks_by_user_id, update_task
 from crud.user import get_user_by_id, get_user_by_username
 from schemas.task import TaskCreate, TaskResponse, TaskUpdate
 from auth.auth import jwks, get_current_user
