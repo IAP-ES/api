@@ -4,9 +4,9 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 
 from db.database import get_db
-from crud.task import create_task, get_tasks_by_user_id, update_task, delete_task
+from crud.task import create_task, get_tasks_by_user_id
 from crud.user import get_user_by_id, get_user_by_username
-from schemas.task import TaskCreate, TaskResponse, TaskUpdate
+from schemas.task import TaskCreate, TaskResponse
 from auth.auth import jwks, get_current_user
 from auth.JWTBearer import JWTBearer
 
@@ -108,45 +108,4 @@ async def get_tasks_by_user(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error while getting tasks",
-        )
-
-
-@router.put(
-    "/tasks/{task_id}",
-    response_model=TaskResponse,
-    status_code=status.HTTP_200_OK,
-    dependencies=[Depends(auth)],
-)
-async def update_task_route(
-    task_id: str, task_data: TaskUpdate, db: Session = Depends(get_db)
-):
-    """
-    Update a task.
-
-    :param task_id: Task ID
-    :param task_data: Task data to update
-    :param db: Database session
-    :return: Task updated
-
-    :raises HTTPException: If the task does not exist or if there is an internal server error
-    :raises Exception: If there is an internal server error
-    """
-
-    try:
-        # Update the task
-        updated_task = update_task(task_id=task_id, task=task_data, db=db)
-        print(updated_task)
-
-        # If successful, return the updated task in the response
-        return updated_task
-
-    except HTTPException as http_exc:
-        # Re-raise HTTP exceptions to maintain the status code
-        raise http_exc
-
-    except Exception as e:
-        logging.error(f"Failed to update task: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error while updating the task",
         )
