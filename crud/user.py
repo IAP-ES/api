@@ -41,3 +41,14 @@ def get_user_by_email(user_email: str, db: Session = Depends(get_db)):
     :return: User
     """
     return db.query(UserModel).filter(UserModel.email == user_email).first()
+
+
+def get_user_by_id(user_id: str, db: Session = Depends(get_db)):
+    """
+    Get a user by ID.
+
+    :param db: Database session
+    :param user_id: ID of the user
+    :return: User
+    """
+    return db.query(UserModel).filter(UserModel.id == user_id).first()
