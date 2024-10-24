@@ -12,6 +12,7 @@ class Task(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     title = Column(String(50), nullable=False)
     description = Column(String(200))
+    status = Column(String(5), default="todo", nullable=False)
     created_at = Column(
         DateTime(timezone=True),
         index=True,

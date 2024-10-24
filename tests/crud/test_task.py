@@ -170,6 +170,7 @@ def test_update_task(test_db, test_user: UserModel):
     task_data_update = TaskUpdate(
         title="Updated Task",
         description="This is an updated task",
+        status="done",
     )
     task_updated = update_task(
         task_id=task_created.id, task=task_data_update, db=test_db
@@ -186,6 +187,7 @@ def test_update_task(test_db, test_user: UserModel):
     assert task_in_db is not None
     assert task_in_db.title == task_data_update.title
     assert task_in_db.description == task_data_update.description
+    assert task_in_db.status == task_data_update.status
     assert task_in_db.user_id == test_user.id
 
 

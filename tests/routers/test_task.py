@@ -62,6 +62,7 @@ def test_create_new_task(mock_jwt_bearer, mock_create_task, mock_get_user_by_use
         id="1",
         title="Test Task",
         description="Test Description",
+        status="todo",
         created_at=datetime.datetime.now(),
     )
 
@@ -82,6 +83,7 @@ def test_create_new_task(mock_jwt_bearer, mock_create_task, mock_get_user_by_use
     assert task_created["id"] == mock_task.id
     assert task_created["title"] == task_data["title"]
     assert task_created["description"] == task_data["description"]
+    assert task_created["status"] == "todo"
     assert task_created["created_at"] == mock_task.created_at.isoformat()
 
     app.dependency_overrides = {}
@@ -178,12 +180,14 @@ def test_get_tasks_by_user(
         id="1",
         title="Task 1",
         description="Description 1",
+        status="todo",
         created_at=datetime.datetime.now(),
     )
     mock_task2 = TaskResponse(
         id="2",
         title="Task 2",
         description="Description 2",
+        status="todo",
         created_at=datetime.datetime.now(),
     )
     mock_get_tasks_by_user_id.return_value = [mock_task1, mock_task2]
@@ -199,8 +203,10 @@ def test_get_tasks_by_user(
     assert len(tasks) == 2
     assert tasks[0]["title"] == mock_task1.title
     assert tasks[0]["description"] == mock_task1.description
+    assert tasks[0]["status"] == mock_task1.status
     assert tasks[1]["title"] == mock_task2.title
     assert tasks[1]["description"] == mock_task2.description
+    assert tasks[1]["status"] == mock_task2.status
 
     # Reset the overrides to not interfere with other tests
     app.dependency_overrides = {}
@@ -267,12 +273,14 @@ def test_update_task_success(mock_jwt_bearer, mock_update_task, mock_get_task_by
     updated_task_data = {
         "title": "Updated Task",
         "description": "Updated Description",
+        "status": "done",
     }
 
     mock_task = TaskResponse(
         id=task_id,
         title="Updated Task",
         description="Updated Description",
+        status="done",
         created_at=datetime.datetime.now(),
     )
 
@@ -295,6 +303,7 @@ def test_update_task_success(mock_jwt_bearer, mock_update_task, mock_get_task_by
     assert updated_task["id"] == mock_task.id
     assert updated_task["title"] == updated_task_data["title"]
     assert updated_task["description"] == updated_task_data["description"]
+    assert updated_task["status"] == "done"
 
     app.dependency_overrides = {}
 
@@ -310,6 +319,7 @@ def test_update_task_not_found(mock_jwt_bearer, mock_update_task):
     updated_task_data = {
         "title": "Updated Task",
         "description": "Updated Description",
+        "status": "done",
     }
 
     headers = {"Authorization": "Bearer token"}
@@ -339,6 +349,7 @@ def test_update_task_internal_server_error(mock_jwt_bearer, mock_update_task):
     updated_task_data = {
         "title": "Updated Task",
         "description": "Updated Description",
+        "status": "done",
     }
 
     headers = {"Authorization": "Bearer token"}
