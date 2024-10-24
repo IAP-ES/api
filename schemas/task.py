@@ -5,7 +5,6 @@ from datetime import datetime
 class TaskCreate(BaseModel):
     title: str
     description: str
-    user_id: str
 
 
 class TaskResponse(BaseModel):

@@ -27,7 +27,11 @@ auth = JWTBearer(jwks)
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(auth)],
 )
-async def create_new_task(task_data: TaskCreate, db: Session = Depends(get_db)):
+async def create_new_task(
+    task_data: TaskCreate,
+    user_username: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     """
     Create a new task for a specific user.
 
@@ -41,17 +45,17 @@ async def create_new_task(task_data: TaskCreate, db: Session = Depends(get_db)):
     """
 
     # Check if the user exists in the database
-    user = get_user_by_id(task_data.user_id, db=db)
+    user = get_user_by_username(user_username, db=db)
 
     if not user:
-        logging.error(f"User with id {task_data.user_id} not found.")
+        logging.error(f"User with username {user_username} not found.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     try:
         # Create a new task
-        new_task = create_task(task=task_data, db=db)
+        new_task = create_task(task=task_data, user_id=user.id, db=db)
 
         # If successful, return the task in the response
         return new_task

@@ -8,7 +8,13 @@ from db.database import get_db
 from main import app
 from models.user import User as UserModel
 from models.task import Task as TaskModel
-from crud.task import create_task, get_tasks_by_user_id, update_task, get_task_by_id, delete_task_by_id
+from crud.task import (
+    create_task,
+    get_tasks_by_user_id,
+    update_task,
+    get_task_by_id,
+    delete_task_by_id,
+)
 from schemas.task import TaskCreate, TaskUpdate
 
 # Configuração de logging para facilitar a depuração
@@ -89,11 +95,10 @@ def test_create_task(test_db, test_user: UserModel):
     task_data = TaskCreate(
         title="Test Task",
         description="This is a test task",
-        user_id=test_user.id,  # Relaciona a task com o usuário de teste
     )
 
     # Chama a função para criar a task
-    task_created = create_task(task_data, test_db)
+    task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
 
     # Verifica se a Task foi criada corretamente
     assert task_created.title == task_data.title
@@ -113,16 +118,12 @@ def test_get_tasks_by_user_id(test_db, test_user: UserModel):
     Testa a função de obter todas as Tasks de um usuário específico.
     """
     # Criar algumas Tasks associadas ao usuário de teste
-    task_data_1 = TaskCreate(
-        title="Test Task 1", description="This is test task 1", user_id=test_user.id
-    )
-    task_data_2 = TaskCreate(
-        title="Test Task 2", description="This is test task 2", user_id=test_user.id
-    )
+    task_data_1 = TaskCreate(title="Test Task 1", description="This is test task 1")
+    task_data_2 = TaskCreate(title="Test Task 2", description="This is test task 2")
 
     # Criar as Tasks no banco de dados
-    create_task(task_data_1, test_db)
-    create_task(task_data_2, test_db)
+    create_task(task=task_data_1, user_id=test_user.id, db=test_db)
+    create_task(task=task_data_2, user_id=test_user.id, db=test_db)
 
     # Chama a função para obter as tasks pelo user_id
     tasks = get_tasks_by_user_id(user_id=test_user.id, db=test_db)
@@ -132,6 +133,7 @@ def test_get_tasks_by_user_id(test_db, test_user: UserModel):
     assert tasks[0].title == task_data_1.title or tasks[0].title == task_data_2.title
     assert tasks[1].title == task_data_1.title or tasks[1].title == task_data_2.title
 
+
 def test_delete_task_by_id(test_db, test_user: UserModel):
     """
     Testa a função de deletar uma Task pelo ID.
@@ -140,7 +142,7 @@ def test_delete_task_by_id(test_db, test_user: UserModel):
     task_data = TaskCreate(
         title="Test Task", description="This is a test task", user_id=test_user.id
     )
-    task_created = create_task(task_data, test_db)
+    task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
 
     # Chama a função para deletar a task pelo ID
     delete_task_by_id(task_created.id, test_db)
@@ -150,7 +152,8 @@ def test_delete_task_by_id(test_db, test_user: UserModel):
         test_db.query(TaskModel).filter(TaskModel.id == task_created.id).first()
     )
     assert task_in_db is None  # A task não deve existir mais no banco de dados
-    
+
+
 def test_update_task(test_db, test_user: UserModel):
     """
     Testa a função de atualização de uma Task no banco de dados.
@@ -161,7 +164,7 @@ def test_update_task(test_db, test_user: UserModel):
         description="This is a test task",
         user_id=test_user.id,  # Relaciona a task com o usuário de teste
     )
-    task_created = create_task(task=task_data, db=test_db)
+    task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
 
     # Atualiza os dados da Task
     task_data_update = TaskUpdate(
@@ -196,7 +199,7 @@ def test_get_task_by_id(test_db, test_user: UserModel):
         description="This is a test task",
         user_id=test_user.id,  # Relaciona a task com o usuário de teste
     )
-    task_created = create_task(task=task_data, db=test_db)
+    task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
 
     # Chama a função para obter a task pelo ID
     task = get_task_by_id(task_id=task_created.id, db=test_db)
