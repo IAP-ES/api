@@ -37,3 +37,22 @@ def get_tasks_by_user_id(user_id: int, db: Session = Depends(get_db)):
         .order_by(TaskModel.created_at)
         .all()
     )
+
+
+def delete_task_by_id(task_id: str, db: Session = Depends(get_db)):
+    """
+    Delete a task by ID.
+
+    :param task_id: Task ID
+    :param db: Database session
+    :return: None
+    """
+
+    task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
+
+    if not task:
+        return None
+
+    db.delete(task)
+    db.commit()
+    return None

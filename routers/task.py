@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 
 from db.database import get_db
-from crud.task import create_task, get_tasks_by_user_id
+from crud.task import create_task, get_tasks_by_user_id, delete_task_by_id
 from crud.user import get_user_by_id, get_user_by_username
 from schemas.task import TaskCreate, TaskResponse
 from auth.auth import jwks, get_current_user
@@ -108,4 +108,40 @@ async def get_tasks_by_user(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error while getting tasks",
+        )
+
+
+@router.delete(
+    "/tasks/{task_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(auth)],
+)
+async def delete_task_by_id_route(task_id: str, db: Session = Depends(get_db)):
+    """
+    Delete a task by ID.
+
+    :param task_id: Task ID
+    :param db: Database session
+    :return: None
+
+    :raises HTTPException: If the task does not exist or if there is an internal server error
+    :raises Exception: If there is an internal server error
+    """
+
+    try:
+        # Delete the task by ID
+        delete_task_by_id(task_id=task_id, db=db)
+
+        # If successful, return None
+        return None
+
+    except HTTPException as http_exc:
+        # Re-raise HTTP exceptions to maintain the status code
+        raise http_exc
+
+    except Exception as e:
+        logging.error(f"Failed to delete task: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error while deleting the task",
         )
