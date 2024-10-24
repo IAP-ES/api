@@ -56,3 +56,14 @@ def delete_task_by_id(task_id: str, db: Session = Depends(get_db)):
     db.delete(task)
     db.commit()
     return None
+
+
+def get_task_by_id(task_id: str, db: Session = Depends(get_db)):
+    """
+    Get a task by ID.
+    :param task_id: Task ID
+    :param db: Database session
+    :return: Task
+    """
+
+    return db.query(TaskModel).filter(TaskModel.id == task_id).first()

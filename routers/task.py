@@ -4,7 +4,12 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 
 from db.database import get_db
-from crud.task import create_task, get_tasks_by_user_id, delete_task_by_id
+from crud.task import (
+    create_task,
+    get_tasks_by_user_id,
+    delete_task_by_id,
+    get_task_by_id,
+)
 from crud.user import get_user_by_id, get_user_by_username
 from schemas.task import TaskCreate, TaskResponse
 from auth.auth import jwks, get_current_user
@@ -129,6 +134,12 @@ async def delete_task_by_id_route(task_id: str, db: Session = Depends(get_db)):
     """
 
     try:
+        task = get_task_by_id(task_id=task_id, db=db)
+        if task is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Task with id {task_id} not found",
+            )
         # Delete the task by ID
         delete_task_by_id(task_id=task_id, db=db)
 
