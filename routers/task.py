@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 
 from db.database import get_db
-from crud.task import create_task, get_tasks_by_user_id, update_task
+from crud.task import create_task, get_tasks_by_user_id, update_task, get_task_by_id
 from crud.user import get_user_by_id, get_user_by_username
 from schemas.task import TaskCreate, TaskResponse, TaskUpdate
 from auth.auth import jwks, get_current_user
@@ -133,9 +133,15 @@ async def update_task_route(
     """
 
     try:
+        task = get_task_by_id(task_id=task_id, db=db)
+        if task is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Task with id {task_id} not found",
+            )
+
         # Update the task
         updated_task = update_task(task_id=task_id, task=task_data, db=db)
-        print(updated_task)
 
         # If successful, return the updated task in the response
         return updated_task

@@ -55,3 +55,15 @@ def update_task(task_id: str, task: TaskUpdate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(task_db)
     return task_db
+
+
+def get_task_by_id(task_id: str, db: Session = Depends(get_db)):
+    """
+    Get a task by ID.
+
+    :param task_id: Task ID
+    :param db: Database session
+    :return: Task
+    """
+
+    return db.query(TaskModel).filter(TaskModel.id == task_id).first()
