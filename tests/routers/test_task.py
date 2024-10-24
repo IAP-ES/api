@@ -252,3 +252,185 @@ def test_get_tasks_internal_server_error(
     assert response.json()["detail"] == "Internal server error while getting tasks"
 
     app.dependency_overrides = {}
+
+
+@patch("routers.task.get_task_by_id")  # Mock the get_task_by_id dependency
+@patch("routers.task.update_task")  # Mock the update_task dependency
+@patch.object(JWTBearer, "__call__", return_value=credentials)
+def test_update_task_success(mock_jwt_bearer, mock_update_task, mock_get_task_by_id):
+    """Test the update_task route, ensuring a task is updated successfully."""
+
+    app.dependency_overrides[auth] = lambda: credentials
+
+    # Task ID and data to be updated
+    task_id = "1"
+    updated_task_data = {
+        "title": "Updated Task",
+        "description": "Updated Description",
+    }
+
+    mock_task = TaskResponse(
+        id=task_id,
+        title="Updated Task",
+        description="Updated Description",
+        created_at=datetime.datetime.now(),
+    )
+
+    mock_update_task.return_value = mock_task
+
+    headers = {"Authorization": "Bearer token"}
+
+    # Make the request to update the task
+    response = client.put(
+        f"/tasks/{task_id}",
+        json=updated_task_data,
+        headers=headers,
+    )
+
+    # Assert the response status code is 200 (OK)
+    assert response.status_code == 200
+
+    # Assert the response contains the updated task data
+    updated_task = response.json()
+    assert updated_task["id"] == mock_task.id
+    assert updated_task["title"] == updated_task_data["title"]
+    assert updated_task["description"] == updated_task_data["description"]
+
+    app.dependency_overrides = {}
+
+
+@patch("routers.task.get_task_by_id", return_value=None)
+@patch.object(JWTBearer, "__call__", return_value=credentials)
+def test_update_task_not_found(mock_jwt_bearer, mock_update_task):
+    """Test update_task route when the task does not exist."""
+
+    app.dependency_overrides[auth] = lambda: credentials
+
+    task_id = "non_existing_task_id"
+    updated_task_data = {
+        "title": "Updated Task",
+        "description": "Updated Description",
+    }
+
+    headers = {"Authorization": "Bearer token"}
+
+    # Make the request to update a non-existing task
+    response = client.put(
+        f"/tasks/{task_id}",
+        json=updated_task_data,
+        headers=headers,
+    )
+
+    # Assert 404 status code
+    assert response.status_code == 404
+    assert response.json()["detail"] == f"Task with id {task_id} not found"
+
+    app.dependency_overrides = {}
+
+
+@patch("routers.task.update_task", side_effect=Exception("Simulated DB error"))
+@patch.object(JWTBearer, "__call__", return_value=credentials)
+def test_update_task_internal_server_error(mock_jwt_bearer, mock_update_task):
+    """Test update_task route when there's an internal server error."""
+
+    app.dependency_overrides[auth] = lambda: credentials
+
+    task_id = "1"
+    updated_task_data = {
+        "title": "Updated Task",
+        "description": "Updated Description",
+    }
+
+    headers = {"Authorization": "Bearer token"}
+
+    # Make the request to update the task, but simulate an internal server error
+    response = client.put(
+        f"/tasks/{task_id}",
+        json=updated_task_data,
+        headers=headers,
+    )
+
+    # Assert 500 status code
+    assert response.status_code == 500
+    assert response.json()["detail"] == "Internal server error while updating the task"
+
+    app.dependency_overrides = {}
+
+
+@patch("routers.task.get_task_by_id")  # Mock get_task_by_id
+@patch("routers.task.delete_task_by_id")  # Mock delete_task_by_id
+@patch.object(
+    JWTBearer, "__call__", return_value=credentials
+)  # Mock the JWTBearer dependency
+def test_delete_task_by_id_success(
+    mock_jwt_bearer, mock_delete_task_by_id, mock_get_task_by_id
+):
+    """Test successful deletion of a task."""
+
+    app.dependency_overrides[auth] = lambda: credentials
+
+    # Task ID for the task to delete
+    task_id = "1"
+
+    # Simulate finding the task
+    mock_task = Mock(id=task_id)
+    mock_get_task_by_id.return_value = mock_task
+
+    # Make the delete request
+    response = client.delete(f"/tasks/{task_id}")
+
+    # Assert the response status code is 204 (No Content)
+    assert response.status_code == 204
+
+    # Capture the actual DB session passed in the function call
+    # Use the actual db object passed in the test to assert
+    mock_delete_task_by_id.assert_called_once()
+
+    # Reset dependency overrides
+    app.dependency_overrides = {}
+
+
+@patch("routers.task.get_task_by_id")  # Mock get_task_by_id
+@patch.object(JWTBearer, "__call__", return_value=credentials)
+def test_delete_task_by_id_not_found(mock_jwt_bearer, mock_get_task_by_id):
+    """Test deletion when task is not found (404 error)."""
+
+    app.dependency_overrides[auth] = lambda: credentials
+
+    task_id = "non_existing_task_id"
+
+    # Simulate task not being found
+    mock_get_task_by_id.return_value = None
+
+    # Make the delete request
+    response = client.delete(f"/tasks/{task_id}")
+
+    # Assert 404 status code
+    assert response.status_code == 404
+    assert response.json()["detail"] == f"Task with id {task_id} not found"
+
+    app.dependency_overrides = {}
+
+
+@patch("routers.task.get_task_by_id", return_value=Mock(id="1"))  # Mock get_task_by_id
+@patch(
+    "routers.task.delete_task_by_id", side_effect=Exception("Simulated DB error")
+)  # Mock delete_task_by_id
+@patch.object(JWTBearer, "__call__", return_value=credentials)
+def test_delete_task_by_id_internal_server_error(
+    mock_jwt_bearer, mock_delete_task_by_id, mock_get_task_by_id
+):
+    """Test deletion when there's an internal server error."""
+
+    app.dependency_overrides[auth] = lambda: credentials
+
+    task_id = "1"
+
+    # Make the delete request
+    response = client.delete(f"/tasks/{task_id}")
+
+    # Assert 500 status code
+    assert response.status_code == 500
+    assert response.json()["detail"] == "Internal server error while deleting the task"
+
+    app.dependency_overrides = {}

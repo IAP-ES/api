@@ -8,8 +8,8 @@ from db.database import get_db
 from main import app
 from models.user import User as UserModel
 from models.task import Task as TaskModel
-from crud.task import create_task, get_tasks_by_user_id
-from schemas.task import TaskCreate
+from crud.task import create_task, get_tasks_by_user_id, update_task, get_task_by_id, delete_task_by_id
+from schemas.task import TaskCreate, TaskUpdate
 
 # Configuração de logging para facilitar a depuração
 logging.basicConfig(level=logging.INFO)
@@ -126,3 +126,78 @@ def test_get_tasks_by_user_id(test_db, test_user: UserModel):
     assert len(tasks) == 2  # Deve retornar 2 tasks
     assert tasks[0].title == task_data_1.title or tasks[0].title == task_data_2.title
     assert tasks[1].title == task_data_1.title or tasks[1].title == task_data_2.title
+
+def test_delete_task_by_id(test_db, test_user: UserModel):
+    """
+    Testa a função de deletar uma Task pelo ID.
+    """
+    # Criar uma Task associada ao usuário de teste
+    task_data = TaskCreate(
+        title="Test Task", description="This is a test task", user_id=test_user.id
+    )
+    task_created = create_task(task_data, test_db)
+
+    # Chama a função para deletar a task pelo ID
+    delete_task_by_id(task_created.id, test_db)
+
+    # Verifica se a Task foi removida do banco de dados
+    task_in_db = (
+        test_db.query(TaskModel).filter(TaskModel.id == task_created.id).first()
+    )
+    assert task_in_db is None  # A task não deve existir mais no banco de dados
+    
+def test_update_task(test_db, test_user: UserModel):
+    """
+    Testa a função de atualização de uma Task no banco de dados.
+    """
+    # Cria uma Task associada ao usuário de teste
+    task_data = TaskCreate(
+        title="Test Task",
+        description="This is a test task",
+        user_id=test_user.id,  # Relaciona a task com o usuário de teste
+    )
+    task_created = create_task(task=task_data, db=test_db)
+
+    # Atualiza os dados da Task
+    task_data_update = TaskUpdate(
+        title="Updated Task",
+        description="This is an updated task",
+    )
+    task_updated = update_task(
+        task_id=task_created.id, task=task_data_update, db=test_db
+    )
+
+    # Verifica se a Task foi atualizada corretamente
+    assert task_updated.title == task_data_update.title
+    assert task_updated.description == task_data_update.description
+
+    # Verifica se a Task foi atualizada no banco de dados
+    task_in_db = (
+        test_db.query(TaskModel).filter(TaskModel.id == task_updated.id).first()
+    )
+    assert task_in_db is not None
+    assert task_in_db.title == task_data_update.title
+    assert task_in_db.description == task_data_update.description
+    assert task_in_db.user_id == test_user.id
+
+
+def test_get_task_by_id(test_db, test_user: UserModel):
+    """
+    Testa a função de obter uma Task pelo ID.
+    """
+    # Cria uma Task associada ao usuário de teste
+    task_data = TaskCreate(
+        title="Test Task",
+        description="This is a test task",
+        user_id=test_user.id,  # Relaciona a task com o usuário de teste
+    )
+    task_created = create_task(task=task_data, db=test_db)
+
+    # Chama a função para obter a task pelo ID
+    task = get_task_by_id(task_id=task_created.id, db=test_db)
+
+    # Verifica se a Task foi retornada corretamente
+    assert task is not None
+    assert task.title == task_data.title
+    assert task.description == task_data.description
+    assert task.user_id == test_user.id

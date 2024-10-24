@@ -12,3 +12,8 @@ class TaskResponse(BaseModel):
     title: str
     description: str
     created_at: datetime
+
+
+class TaskUpdate(BaseModel):
+    title: str
+    description: str
