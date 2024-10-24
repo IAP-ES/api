@@ -6,7 +6,7 @@ from models.task import Task as TaskModel
 from schemas.task import TaskCreate
 
 
-def create_task(task: TaskCreate, db: Session = Depends(get_db)):
+def create_task(task: TaskCreate, user_id: str, db: Session = Depends(get_db)):
     """
     Create a task.
 
@@ -15,14 +15,14 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     :return: Task created
     """
 
-    task_db = TaskModel(**task.model_dump())
-    db.add(task_db)
+    new_task = TaskModel(**task.model_dump(), user_id=user_id)
+    db.add(new_task)
     db.commit()
-    db.refresh(task_db)
-    return task_db
+    db.refresh(new_task)
+    return new_task
 
 
-def get_tasks_by_user_id(user_id: int, db: Session = Depends(get_db)):
+def get_tasks_by_user_id(user_id: str, db: Session = Depends(get_db)):
     """
     Get all tasks for a specific user.
 
