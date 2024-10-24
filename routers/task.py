@@ -9,6 +9,7 @@ from crud.task import (
     get_tasks_by_user_id,
     delete_task_by_id,
     get_task_by_id,
+    update_task,
 )
 from crud.user import get_user_by_id, get_user_by_username
 from schemas.task import TaskCreate, TaskResponse, TaskUpdate
@@ -128,7 +129,7 @@ async def delete_task_by_id_route(task_id: str, db: Session = Depends(get_db)):
     :param task_id: Task ID
     :param db: Database session
     :return: None
-    
+
     :raises HTTPException: If the task does not exist or if there is an internal server error
     :raises Exception: If there is an internal server error
     """
@@ -156,7 +157,8 @@ async def delete_task_by_id_route(task_id: str, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error while deleting the task",
         )
-        
+
+
 @router.put(
     "/tasks/{task_id}",
     response_model=TaskResponse,

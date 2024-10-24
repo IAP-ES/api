@@ -38,6 +38,7 @@ def get_tasks_by_user_id(user_id: int, db: Session = Depends(get_db)):
         .all()
     )
 
+
 def delete_task_by_id(task_id: str, db: Session = Depends(get_db)):
     """
     Delete a task by ID.
@@ -55,7 +56,8 @@ def delete_task_by_id(task_id: str, db: Session = Depends(get_db)):
     db.delete(task)
     db.commit()
     return None
-  
+
+
 def update_task(task_id: str, task: TaskUpdate, db: Session = Depends(get_db)):
     """
     Update a task.
@@ -72,6 +74,7 @@ def update_task(task_id: str, task: TaskUpdate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(task_db)
     return task_db
+
 
 def get_task_by_id(task_id: str, db: Session = Depends(get_db)):
     """

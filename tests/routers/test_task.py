@@ -353,7 +353,8 @@ def test_update_task_internal_server_error(mock_jwt_bearer, mock_update_task):
 
     app.dependency_overrides = {}
 
-    @patch("routers.task.get_task_by_id")  # Mock get_task_by_id
+
+@patch("routers.task.get_task_by_id")  # Mock get_task_by_id
 @patch("routers.task.delete_task_by_id")  # Mock delete_task_by_id
 @patch.object(
     JWTBearer, "__call__", return_value=credentials
@@ -406,6 +407,7 @@ def test_delete_task_by_id_not_found(mock_jwt_bearer, mock_get_task_by_id):
     assert response.json()["detail"] == f"Task with id {task_id} not found"
 
     app.dependency_overrides = {}
+
 
 @patch("routers.task.get_task_by_id", return_value=Mock(id="1"))  # Mock get_task_by_id
 @patch(
