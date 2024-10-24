@@ -89,11 +89,10 @@ def test_create_task(test_db, test_user: UserModel):
     task_data = TaskCreate(
         title="Test Task",
         description="This is a test task",
-        user_id=test_user.id,  # Relaciona a task com o usuário de teste
     )
 
     # Chama a função para criar a task
-    task_created = create_task(task_data, test_db)
+    task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
 
     # Verifica se a Task foi criada corretamente
     assert task_created.title == task_data.title
@@ -113,16 +112,12 @@ def test_get_tasks_by_user_id(test_db, test_user: UserModel):
     Testa a função de obter todas as Tasks de um usuário específico.
     """
     # Criar algumas Tasks associadas ao usuário de teste
-    task_data_1 = TaskCreate(
-        title="Test Task 1", description="This is test task 1", user_id=test_user.id
-    )
-    task_data_2 = TaskCreate(
-        title="Test Task 2", description="This is test task 2", user_id=test_user.id
-    )
+    task_data_1 = TaskCreate(title="Test Task 1", description="This is test task 1")
+    task_data_2 = TaskCreate(title="Test Task 2", description="This is test task 2")
 
     # Criar as Tasks no banco de dados
-    create_task(task_data_1, test_db)
-    create_task(task_data_2, test_db)
+    create_task(task=task_data_1, user_id=test_user.id, db=test_db)
+    create_task(task=task_data_2, user_id=test_user.id, db=test_db)
 
     # Chama a função para obter as tasks pelo user_id
     tasks = get_tasks_by_user_id(user_id=test_user.id, db=test_db)

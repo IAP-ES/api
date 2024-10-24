@@ -38,14 +38,16 @@ def reset_mock_db(mock_db):
 
 
 # Test for create_new_task route
+@patch("routers.task.get_user_by_username")  # Mock the get_user_by_id dependency
 @patch("routers.task.create_task")  # Mock the create_task dependency
 @patch.object(
     JWTBearer, "__call__", return_value=credentials
 )  # Mock the JWTBearer dependency
-def test_create_new_task(mock_jwt_bearer, mock_create_task):
+def test_create_new_task(mock_jwt_bearer, mock_create_task, mock_get_user_by_username):
     """Test the create_new_task route, ensuring a task is created successfully."""
 
     app.dependency_overrides[auth] = lambda: credentials
+    app.dependency_overrides[get_current_user] = lambda: "username1"
 
     # Set the Authorization header
     headers = {"Authorization": "Bearer token"}
@@ -54,7 +56,6 @@ def test_create_new_task(mock_jwt_bearer, mock_create_task):
     task_data = {
         "title": "Test Task",
         "description": "Test Description",
-        "user_id": "1",
     }
 
     mock_task = TaskResponse(
@@ -86,22 +87,22 @@ def test_create_new_task(mock_jwt_bearer, mock_create_task):
     app.dependency_overrides = {}
 
 
-@patch("routers.task.get_user_by_id")  # Mock the create_task dependency
+@patch("routers.task.get_user_by_username")  # Mock the create_task dependency
 @patch.object(JWTBearer, "__call__", return_value=credentials)
-def test_create_new_task_user_not_found(mock_jwt_bearer, mock_get_user_by_id):
+def test_create_new_task_user_not_found(mock_jwt_bearer, mock_get_user_by_username):
     """Test the create_new_task route when the user does not exist."""
 
     app.dependency_overrides[auth] = lambda: credentials
+    app.dependency_overrides[get_current_user] = lambda: "username1"
 
     headers = {"Authorization": "Bearer token"}
 
     task_data = {
         "title": "Test Task",
         "description": "Test Description",
-        "user_id": "non_existing_user_id",
     }
 
-    mock_get_user_by_id.return_value = None
+    mock_get_user_by_username.return_value = None
 
     # Make the request
     response = client.post(
@@ -118,14 +119,17 @@ def test_create_new_task_user_not_found(mock_jwt_bearer, mock_get_user_by_id):
 
 
 @patch(
-    "routers.task.get_user_by_id", return_value=Exception
+    "routers.task.get_user_by_username", return_value=Exception
 )  # Mock the get_user_by_id dependency
 @patch.object(JWTBearer, "__call__", return_value=credentials)
-def test_create_new_task_internal_server_error(mock_jwt_bearer, mock_get_user_by_id):
+def test_create_new_task_internal_server_error(
+    mock_jwt_bearer, mock_get_user_by_username
+):
     """Test create_new_task route when there's an internal server error."""
 
     # Mock JWT auth
     app.dependency_overrides[auth] = lambda: credentials
+    app.dependency_overrides[get_current_user] = lambda: "username1"
 
     # Set the Authorization header
     headers = {"Authorization": "Bearer token"}
@@ -134,7 +138,6 @@ def test_create_new_task_internal_server_error(mock_jwt_bearer, mock_get_user_by
     task_data = {
         "title": "Test Task",
         "description": "Test Description",
-        "user_id": "1",
     }
 
     # Make the request to create a new task
