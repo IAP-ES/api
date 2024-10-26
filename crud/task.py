@@ -1,5 +1,6 @@
 from fastapi import Depends
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 from db.database import get_db
 from models.task import Task as TaskModel
@@ -16,6 +17,8 @@ def create_task(task: TaskCreate, user_id: str, db: Session = Depends(get_db)):
     """
 
     new_task = TaskModel(**task.model_dump(), user_id=user_id)
+    if new_task.deadline and new_task.deadline < datetime.now():
+        raise ValueError("Deadline must be in the future")
     db.add(new_task)
     db.commit()
     db.refresh(new_task)
@@ -73,6 +76,10 @@ def update_task(task_id: str, task: TaskUpdate, db: Session = Depends(get_db)):
     task_db.description = task.description
     task_db.status = task.status
     task_db.priority = task.priority
+    if task.deadline:
+        if task.deadline < datetime.now():
+            raise ValueError("Deadline must be in the future")
+        task_db.deadline = task.deadline
     db.commit()
     db.refresh(task_db)
     return task_db

@@ -14,6 +14,7 @@ class Task(Base):
     description = Column(String(200))
     status = Column(String(6), default="todo", nullable=False)
     priority = Column(String(5), nullable=False)
+    deadline = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(
         DateTime(timezone=True),
         index=True,

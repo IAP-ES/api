@@ -3,6 +3,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from testcontainers.mysql import MySqlContainer
+from datetime import datetime, timedelta
 
 from db.database import get_db
 from main import app
@@ -88,7 +89,49 @@ def create_test_user(test_db):
     test_db.commit()  # Comita as alterações no banco de dados
 
 
-def test_create_task_with_priority(test_db, test_user: UserModel):
+def test_create_task_with_deadline_future(test_db, test_user: UserModel):
+    """
+    Testa a função de criação de uma Task no banco de dados.
+    """
+    task_data = TaskCreate(
+        title="Test Task",
+        description="This is a test task",
+        priority="high",
+        deadline=datetime.now() + timedelta(days=1),
+    )
+
+    # Chama a função para criar a task
+    task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
+
+    # Verifica se a Task foi salva no banco de dados
+    task_in_db = (
+        test_db.query(TaskModel).filter(TaskModel.id == task_created.id).first()
+    )
+    assert task_in_db is not None
+    assert task_in_db.title == task_data.title
+    assert task_in_db.description == task_data.description
+    assert task_in_db.priority == task_data.priority
+    assert abs((task_in_db.deadline - task_data.deadline).total_seconds()) <= 1
+    assert task_in_db.user_id == test_user.id
+
+
+def test_create_task_with_deadline_past(test_db, test_user: UserModel):
+    """
+    Testa a função de criação de uma Task no banco de dados.
+    """
+    task_data = TaskCreate(
+        title="Test Task",
+        description="This is a test task",
+        priority="high",
+        deadline=datetime.now() - timedelta(days=1),
+    )
+
+    # Verifica se o ValueError é levantado ao tentar criar uma task com deadline no passado
+    with pytest.raises(ValueError, match="Deadline must be in the future"):
+        create_task(task=task_data, user_id=test_user.id, db=test_db)
+
+
+def test_create_task_without_deadline(test_db, test_user: UserModel):
     """
     Testa a função de criação de uma Task no banco de dados.
     """
@@ -109,6 +152,7 @@ def test_create_task_with_priority(test_db, test_user: UserModel):
     assert task_in_db.title == task_data.title
     assert task_in_db.description == task_data.description
     assert task_in_db.priority == task_data.priority
+    assert task_in_db.deadline is None
     assert task_in_db.user_id == test_user.id
 
 
@@ -160,7 +204,7 @@ def test_delete_task_by_id(test_db, test_user: UserModel):
     assert task_in_db is None  # A task não deve existir mais no banco de dados
 
 
-def test_update_task(test_db, test_user: UserModel):
+def test_update_task_without_deadline(test_db, test_user: UserModel):
     """
     Testa a função de atualização de uma Task no banco de dados.
     """
@@ -193,7 +237,111 @@ def test_update_task(test_db, test_user: UserModel):
     assert task_in_db.description == task_data_update.description
     assert task_in_db.priority == task_data_update.priority
     assert task_in_db.status == task_data_update.status
+    assert task_in_db.deadline is None
     assert task_in_db.user_id == test_user.id
+
+
+def test_update_task_with_deadline(test_db, test_user: UserModel):
+    """
+    Testa a função de atualização de uma Task no banco de dados.
+    """
+    # Cria uma Task associada ao usuário de teste
+    task_data = TaskCreate(
+        title="Test Task",
+        description="This is a test task",
+        priority="low",
+        deadline=datetime.now() + timedelta(days=1),
+        user_id=test_user.id,  # Relaciona a task com o usuário de teste
+    )
+    task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
+
+    # Atualiza os dados da Task
+    task_data_update = TaskUpdate(
+        title="Updated Task",
+        description="This is an updated task",
+        priority="high",
+        status="done",
+        deadline=datetime.now() + timedelta(days=2),
+    )
+    task_updated = update_task(
+        task_id=task_created.id, task=task_data_update, db=test_db
+    )
+
+    # Verifica se a Task foi atualizada no banco de dados
+    task_in_db = (
+        test_db.query(TaskModel).filter(TaskModel.id == task_updated.id).first()
+    )
+    assert task_in_db is not None
+    assert task_in_db.title == task_data_update.title
+    assert task_in_db.description == task_data_update.description
+    assert task_in_db.priority == task_data_update.priority
+    assert task_in_db.status == task_data_update.status
+    assert abs((task_in_db.deadline - task_data_update.deadline).total_seconds()) <= 1
+    assert task_in_db.user_id == test_user.id
+
+
+def test_update_task_without_initial_deadline(test_db, test_user: UserModel):
+    """
+    Testa a função de atualização de uma Task no banco de dados.
+    """
+    # Cria uma Task associada ao usuário de teste
+    task_data = TaskCreate(
+        title="Test Task",
+        description="This is a test task",
+        priority="low",
+        user_id=test_user.id,  # Relaciona a task com o usuário de teste
+    )
+    task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
+
+    # Atualiza os dados da Task
+    task_data_update = TaskUpdate(
+        title="Updated Task",
+        description="This is an updated task",
+        priority="high",
+        status="done",
+        deadline=datetime.now() + timedelta(days=1),
+    )
+    task_updated = update_task(
+        task_id=task_created.id, task=task_data_update, db=test_db
+    )
+
+    # Verifica se a Task foi atualizada no banco de dados
+    task_in_db = (
+        test_db.query(TaskModel).filter(TaskModel.id == task_updated.id).first()
+    )
+    assert task_in_db is not None
+    assert task_in_db.title == task_data_update.title
+    assert task_in_db.description == task_data_update.description
+    assert task_in_db.priority == task_data_update.priority
+    assert task_in_db.status == task_data_update.status
+    assert abs((task_in_db.deadline - task_data_update.deadline).total_seconds()) <= 1
+    assert task_in_db.user_id == test_user.id
+
+
+def test_update_task_with_deadline_past(test_db, test_user: UserModel):
+    """
+    Testa a função de atualização de uma Task no banco de dados.
+    """
+    # Cria uma Task associada ao usuário de teste
+    task_data = TaskCreate(
+        title="Test Task",
+        description="This is a test task",
+        priority="low",
+        user_id=test_user.id,  # Relaciona a task com o usuário de teste
+    )
+    task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
+
+    # Atualiza os dados da Task
+    task_data_update = TaskUpdate(
+        title="Updated Task",
+        description="This is an updated task",
+        priority="high",
+        status="done",
+        deadline=datetime.now() - timedelta(days=1),
+    )
+
+    with pytest.raises(ValueError, match="Deadline must be in the future"):
+        update_task(task_id=task_created.id, task=task_data_update, db=test_db)
 
 
 def test_get_task_by_id(test_db, test_user: UserModel):

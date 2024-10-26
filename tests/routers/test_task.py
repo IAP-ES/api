@@ -161,6 +161,47 @@ def test_create_new_task_internal_server_error(
     app.dependency_overrides = {}
 
 
+@patch("routers.task.get_user_by_username")  # Mock the get_user_by_username dependency
+@patch(
+    "routers.task.create_task", side_effect=ValueError("Invalid task data")
+)  # Simulate ValueError in create_task
+@patch.object(JWTBearer, "__call__", return_value=credentials)
+def test_create_new_task_value_error(
+    mock_jwt_bearer, mock_create_task, mock_get_user_by_username
+):
+    """Test the create_new_task route when there is a ValueError (e.g., invalid task data)."""
+
+    # Mock the current user
+    app.dependency_overrides[auth] = lambda: credentials
+    app.dependency_overrides[get_current_user] = lambda: "username1"
+
+    headers = {"Authorization": "Bearer token"}
+
+    # Data that will trigger the ValueError in create_task
+    task_data = {
+        "title": "",  # Example of invalid data that could trigger a ValueError
+        "description": "Test Description",
+        "priority": "invalid_priority",  # Example of an invalid priority
+    }
+
+    # Simulate valid user
+    mock_get_user_by_username.return_value = Mock(id="1")
+
+    # Make the request
+    response = client.post(
+        "/tasks",
+        json=task_data,
+        headers=headers,
+    )
+
+    # Assert 400 status code for ValueError
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Invalid task data"
+
+    # Clean up overrides
+    app.dependency_overrides = {}
+
+
 # Test for get tasks by user route
 
 
@@ -378,6 +419,48 @@ def test_update_task_internal_server_error(mock_jwt_bearer, mock_update_task):
     assert response.status_code == 500
     assert response.json()["detail"] == "Internal server error while updating the task"
 
+    app.dependency_overrides = {}
+
+
+@patch("routers.task.get_task_by_id")  # Mock the get_task_by_id dependency
+@patch(
+    "routers.task.update_task", side_effect=ValueError("Invalid update data")
+)  # Simulate ValueError in update_task
+@patch.object(JWTBearer, "__call__", return_value=credentials)
+def test_update_task_value_error(
+    mock_jwt_bearer, mock_update_task, mock_get_task_by_id
+):
+    """Test the update_task route when there is a ValueError (e.g., invalid update data)."""
+
+    # Mock the current user
+    app.dependency_overrides[auth] = lambda: credentials
+
+    # Task ID and invalid data that will trigger a ValueError in update_task
+    task_id = "1"
+    updated_task_data = {
+        "title": "",  # Example of invalid data that could trigger a ValueError
+        "description": "Updated Description",
+        "status": "invalid_status",  # Example of an invalid status
+        "priority": "high",
+    }
+
+    # Simulate existing task
+    mock_get_task_by_id.return_value = Mock(id=task_id)
+
+    headers = {"Authorization": "Bearer token"}
+
+    # Make the request
+    response = client.put(
+        f"/tasks/{task_id}",
+        json=updated_task_data,
+        headers=headers,
+    )
+
+    # Assert 400 status code for ValueError
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Invalid update data"
+
+    # Clean up overrides
     app.dependency_overrides = {}
 
 

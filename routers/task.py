@@ -64,6 +64,12 @@ async def create_new_task(
         # Re-raise HTTP exceptions to maintain the status code
         raise http_exc
 
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(ve),
+        )
+
     except Exception as e:
         logging.error(f"Failed to create task: {e}")
         raise HTTPException(
@@ -201,6 +207,12 @@ async def update_task_route(
     except HTTPException as http_exc:
         # Re-raise HTTP exceptions to maintain the status code
         raise http_exc
+
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(ve),
+        )
 
     except Exception as e:
         logging.error(f"Failed to update task: {e}")
