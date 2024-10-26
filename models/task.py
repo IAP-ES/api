@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy import Column, String, DateTime, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 import datetime
 import uuid
@@ -13,7 +13,7 @@ class Task(Base):
     title = Column(String(50), nullable=False)
     description = Column(String(200))
     status = Column(String(6), default="todo", nullable=False)
-    priority = Column(String(5), nullable=False)
+    priority = Column(Integer, nullable=False)
     deadline = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(
         DateTime(timezone=True),

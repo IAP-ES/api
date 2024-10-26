@@ -55,7 +55,7 @@ def test_create_new_task(mock_jwt_bearer, mock_create_task, mock_get_user_by_use
     task_data = {
         "title": "Test Task",
         "description": "Test Description",
-        "priority": "high",
+        "priority": 3,
     }
 
     mock_task = TaskResponse(
@@ -63,7 +63,7 @@ def test_create_new_task(mock_jwt_bearer, mock_create_task, mock_get_user_by_use
         title="Test Task",
         description="Test Description",
         status="todo",
-        priority="high",
+        priority=3,
         created_at=datetime.datetime.now(),
     )
 
@@ -85,7 +85,7 @@ def test_create_new_task(mock_jwt_bearer, mock_create_task, mock_get_user_by_use
     assert task_created["title"] == task_data["title"]
     assert task_created["description"] == task_data["description"]
     assert task_created["status"] == "todo"
-    assert task_created["priority"] == "high"
+    assert task_created["priority"] == task_data["priority"]
     assert task_created["created_at"] == mock_task.created_at.isoformat()
 
     app.dependency_overrides = {}
@@ -104,7 +104,7 @@ def test_create_new_task_user_not_found(mock_jwt_bearer, mock_get_user_by_userna
     task_data = {
         "title": "Test Task",
         "description": "Test Description",
-        "priority": "high",
+        "priority": 3,
     }
 
     mock_get_user_by_username.return_value = None
@@ -143,7 +143,7 @@ def test_create_new_task_internal_server_error(
     task_data = {
         "title": "Test Task",
         "description": "Test Description",
-        "priority": "high",
+        "priority": 3,
     }
 
     # Make the request to create a new task
@@ -181,7 +181,7 @@ def test_create_new_task_value_error(
     task_data = {
         "title": "",  # Example of invalid data that could trigger a ValueError
         "description": "Test Description",
-        "priority": "invalid_priority",  # Example of an invalid priority
+        "priority": 23423,  # Example of an invalid priority
     }
 
     # Simulate valid user
@@ -226,7 +226,7 @@ def test_get_tasks_by_user(
         title="Task 1",
         description="Description 1",
         status="todo",
-        priority="high",
+        priority=3,
         created_at=datetime.datetime.now(),
     )
     mock_task2 = TaskResponse(
@@ -234,7 +234,7 @@ def test_get_tasks_by_user(
         title="Task 2",
         description="Description 2",
         status="todo",
-        priority="low",
+        priority=1,
         created_at=datetime.datetime.now(),
     )
     mock_get_tasks_by_user_id.return_value = [mock_task1, mock_task2]
@@ -323,7 +323,7 @@ def test_update_task_success(mock_jwt_bearer, mock_update_task, mock_get_task_by
         "title": "Updated Task",
         "description": "Updated Description",
         "status": "done",
-        "priority": "high",
+        "priority": 3,
     }
 
     mock_task = TaskResponse(
@@ -331,7 +331,7 @@ def test_update_task_success(mock_jwt_bearer, mock_update_task, mock_get_task_by
         title="Updated Task",
         description="Updated Description",
         status="done",
-        priority="high",
+        priority=3,
         created_at=datetime.datetime.now(),
     )
 
@@ -354,8 +354,8 @@ def test_update_task_success(mock_jwt_bearer, mock_update_task, mock_get_task_by
     assert updated_task["id"] == mock_task.id
     assert updated_task["title"] == updated_task_data["title"]
     assert updated_task["description"] == updated_task_data["description"]
-    assert updated_task["status"] == "done"
-    assert updated_task["priority"] == "high"
+    assert updated_task["status"] == updated_task_data["status"]
+    assert updated_task["priority"] == updated_task_data["priority"]
 
     app.dependency_overrides = {}
 
@@ -372,7 +372,7 @@ def test_update_task_not_found(mock_jwt_bearer, mock_update_task):
         "title": "Updated Task",
         "description": "Updated Description",
         "status": "done",
-        "priority": "high",
+        "priority": 3,
     }
 
     headers = {"Authorization": "Bearer token"}
@@ -403,7 +403,7 @@ def test_update_task_internal_server_error(mock_jwt_bearer, mock_update_task):
         "title": "Updated Task",
         "description": "Updated Description",
         "status": "done",
-        "priority": "high",
+        "priority": 3,
     }
 
     headers = {"Authorization": "Bearer token"}
@@ -441,7 +441,7 @@ def test_update_task_value_error(
         "title": "",  # Example of invalid data that could trigger a ValueError
         "description": "Updated Description",
         "status": "invalid_status",  # Example of an invalid status
-        "priority": "high",
+        "priority": 3,
     }
 
     # Simulate existing task

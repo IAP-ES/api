@@ -6,7 +6,7 @@ from typing import Optional
 class TaskCreate(BaseModel):
     title: str
     description: str
-    priority: str
+    priority: int
     deadline: Optional[datetime] = None
 
 
@@ -15,7 +15,7 @@ class TaskResponse(BaseModel):
     title: str
     description: str
     status: str
-    priority: str
+    priority: int
     deadline: Optional[datetime] = None
     created_at: datetime
 
@@ -24,5 +24,5 @@ class TaskUpdate(BaseModel):
     title: str
     description: str
     status: str
-    priority: str
+    priority: int
     deadline: Optional[datetime] = None

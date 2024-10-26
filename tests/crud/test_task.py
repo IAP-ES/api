@@ -96,7 +96,7 @@ def test_create_task_with_deadline_future(test_db, test_user: UserModel):
     task_data = TaskCreate(
         title="Test Task",
         description="This is a test task",
-        priority="high",
+        priority=1,
         deadline=datetime.now() + timedelta(days=1),
     )
 
@@ -122,7 +122,7 @@ def test_create_task_with_deadline_past(test_db, test_user: UserModel):
     task_data = TaskCreate(
         title="Test Task",
         description="This is a test task",
-        priority="high",
+        priority=1,
         deadline=datetime.now() - timedelta(days=1),
     )
 
@@ -138,7 +138,7 @@ def test_create_task_without_deadline(test_db, test_user: UserModel):
     task_data = TaskCreate(
         title="Test Task",
         description="This is a test task",
-        priority="high",
+        priority=1,
     )
 
     # Chama a função para criar a task
@@ -162,10 +162,10 @@ def test_get_tasks_by_user_id(test_db, test_user: UserModel):
     """
     # Criar algumas Tasks associadas ao usuário de teste
     task_data_1 = TaskCreate(
-        title="Test Task 1", description="This is test task 1", priority="low"
+        title="Test Task 1", description="This is test task 1", priority=2
     )
     task_data_2 = TaskCreate(
-        title="Test Task 2", description="This is test task 2", priority="high"
+        title="Test Task 2", description="This is test task 2", priority=3
     )
 
     # Criar as Tasks no banco de dados
@@ -189,7 +189,7 @@ def test_delete_task_by_id(test_db, test_user: UserModel):
     task_data = TaskCreate(
         title="Test Task",
         description="This is a test task",
-        priority="low",
+        priority=1,
         user_id=test_user.id,
     )
     task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
@@ -212,7 +212,7 @@ def test_update_task_without_deadline(test_db, test_user: UserModel):
     task_data = TaskCreate(
         title="Test Task",
         description="This is a test task",
-        priority="low",
+        priority=1,
         user_id=test_user.id,  # Relaciona a task com o usuário de teste
     )
     task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
@@ -221,7 +221,7 @@ def test_update_task_without_deadline(test_db, test_user: UserModel):
     task_data_update = TaskUpdate(
         title="Updated Task",
         description="This is an updated task",
-        priority="high",
+        priority=3,
         status="done",
     )
     task_updated = update_task(
@@ -249,7 +249,7 @@ def test_update_task_with_deadline(test_db, test_user: UserModel):
     task_data = TaskCreate(
         title="Test Task",
         description="This is a test task",
-        priority="low",
+        priority=1,
         deadline=datetime.now() + timedelta(days=1),
         user_id=test_user.id,  # Relaciona a task com o usuário de teste
     )
@@ -259,7 +259,7 @@ def test_update_task_with_deadline(test_db, test_user: UserModel):
     task_data_update = TaskUpdate(
         title="Updated Task",
         description="This is an updated task",
-        priority="high",
+        priority=3,
         status="done",
         deadline=datetime.now() + timedelta(days=2),
     )
@@ -288,7 +288,7 @@ def test_update_task_without_initial_deadline(test_db, test_user: UserModel):
     task_data = TaskCreate(
         title="Test Task",
         description="This is a test task",
-        priority="low",
+        priority=1,
         user_id=test_user.id,  # Relaciona a task com o usuário de teste
     )
     task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
@@ -297,7 +297,7 @@ def test_update_task_without_initial_deadline(test_db, test_user: UserModel):
     task_data_update = TaskUpdate(
         title="Updated Task",
         description="This is an updated task",
-        priority="high",
+        priority=3,
         status="done",
         deadline=datetime.now() + timedelta(days=1),
     )
@@ -326,7 +326,7 @@ def test_update_task_with_deadline_past(test_db, test_user: UserModel):
     task_data = TaskCreate(
         title="Test Task",
         description="This is a test task",
-        priority="low",
+        priority=1,
         user_id=test_user.id,  # Relaciona a task com o usuário de teste
     )
     task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
@@ -335,7 +335,7 @@ def test_update_task_with_deadline_past(test_db, test_user: UserModel):
     task_data_update = TaskUpdate(
         title="Updated Task",
         description="This is an updated task",
-        priority="high",
+        priority=3,
         status="done",
         deadline=datetime.now() - timedelta(days=1),
     )
@@ -352,7 +352,7 @@ def test_get_task_by_id(test_db, test_user: UserModel):
     task_data = TaskCreate(
         title="Test Task",
         description="This is a test task",
-        priority="low",
+        priority=1,
         user_id=test_user.id,  # Relaciona a task com o usuário de teste
     )
     task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
