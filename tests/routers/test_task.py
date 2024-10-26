@@ -37,7 +37,6 @@ def reset_mock_db(mock_db):
     mock_db.reset_mock()
 
 
-# Test for create_new_task route
 @patch("routers.task.get_user_by_username")  # Mock the get_user_by_id dependency
 @patch("routers.task.create_task")  # Mock the create_task dependency
 @patch.object(
@@ -56,6 +55,7 @@ def test_create_new_task(mock_jwt_bearer, mock_create_task, mock_get_user_by_use
     task_data = {
         "title": "Test Task",
         "description": "Test Description",
+        "priority": "high",
     }
 
     mock_task = TaskResponse(
@@ -63,6 +63,7 @@ def test_create_new_task(mock_jwt_bearer, mock_create_task, mock_get_user_by_use
         title="Test Task",
         description="Test Description",
         status="todo",
+        priority="high",
         created_at=datetime.datetime.now(),
     )
 
@@ -84,6 +85,7 @@ def test_create_new_task(mock_jwt_bearer, mock_create_task, mock_get_user_by_use
     assert task_created["title"] == task_data["title"]
     assert task_created["description"] == task_data["description"]
     assert task_created["status"] == "todo"
+    assert task_created["priority"] == "high"
     assert task_created["created_at"] == mock_task.created_at.isoformat()
 
     app.dependency_overrides = {}
@@ -102,6 +104,7 @@ def test_create_new_task_user_not_found(mock_jwt_bearer, mock_get_user_by_userna
     task_data = {
         "title": "Test Task",
         "description": "Test Description",
+        "priority": "high",
     }
 
     mock_get_user_by_username.return_value = None
@@ -140,6 +143,7 @@ def test_create_new_task_internal_server_error(
     task_data = {
         "title": "Test Task",
         "description": "Test Description",
+        "priority": "high",
     }
 
     # Make the request to create a new task
@@ -181,6 +185,7 @@ def test_get_tasks_by_user(
         title="Task 1",
         description="Description 1",
         status="todo",
+        priority="high",
         created_at=datetime.datetime.now(),
     )
     mock_task2 = TaskResponse(
@@ -188,6 +193,7 @@ def test_get_tasks_by_user(
         title="Task 2",
         description="Description 2",
         status="todo",
+        priority="low",
         created_at=datetime.datetime.now(),
     )
     mock_get_tasks_by_user_id.return_value = [mock_task1, mock_task2]
@@ -204,9 +210,11 @@ def test_get_tasks_by_user(
     assert tasks[0]["title"] == mock_task1.title
     assert tasks[0]["description"] == mock_task1.description
     assert tasks[0]["status"] == mock_task1.status
+    assert tasks[0]["priority"] == mock_task1.priority
     assert tasks[1]["title"] == mock_task2.title
     assert tasks[1]["description"] == mock_task2.description
     assert tasks[1]["status"] == mock_task2.status
+    assert tasks[1]["priority"] == mock_task2.priority
 
     # Reset the overrides to not interfere with other tests
     app.dependency_overrides = {}
@@ -274,6 +282,7 @@ def test_update_task_success(mock_jwt_bearer, mock_update_task, mock_get_task_by
         "title": "Updated Task",
         "description": "Updated Description",
         "status": "done",
+        "priority": "high",
     }
 
     mock_task = TaskResponse(
@@ -281,6 +290,7 @@ def test_update_task_success(mock_jwt_bearer, mock_update_task, mock_get_task_by
         title="Updated Task",
         description="Updated Description",
         status="done",
+        priority="high",
         created_at=datetime.datetime.now(),
     )
 
@@ -304,6 +314,7 @@ def test_update_task_success(mock_jwt_bearer, mock_update_task, mock_get_task_by
     assert updated_task["title"] == updated_task_data["title"]
     assert updated_task["description"] == updated_task_data["description"]
     assert updated_task["status"] == "done"
+    assert updated_task["priority"] == "high"
 
     app.dependency_overrides = {}
 
@@ -320,6 +331,7 @@ def test_update_task_not_found(mock_jwt_bearer, mock_update_task):
         "title": "Updated Task",
         "description": "Updated Description",
         "status": "done",
+        "priority": "high",
     }
 
     headers = {"Authorization": "Bearer token"}
@@ -350,6 +362,7 @@ def test_update_task_internal_server_error(mock_jwt_bearer, mock_update_task):
         "title": "Updated Task",
         "description": "Updated Description",
         "status": "done",
+        "priority": "high",
     }
 
     headers = {"Authorization": "Bearer token"}
