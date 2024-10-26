@@ -88,22 +88,18 @@ def create_test_user(test_db):
     test_db.commit()  # Comita as alterações no banco de dados
 
 
-def test_create_task(test_db, test_user: UserModel):
+def test_create_task_with_priority(test_db, test_user: UserModel):
     """
     Testa a função de criação de uma Task no banco de dados.
     """
     task_data = TaskCreate(
         title="Test Task",
         description="This is a test task",
+        priority="high",
     )
 
     # Chama a função para criar a task
     task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
-
-    # Verifica se a Task foi criada corretamente
-    assert task_created.title == task_data.title
-    assert task_created.description == task_data.description
-    assert task_created.user_id == test_user.id
 
     # Verifica se a Task foi salva no banco de dados
     task_in_db = (
@@ -111,6 +107,9 @@ def test_create_task(test_db, test_user: UserModel):
     )
     assert task_in_db is not None
     assert task_in_db.title == task_data.title
+    assert task_in_db.description == task_data.description
+    assert task_in_db.priority == task_data.priority
+    assert task_in_db.user_id == test_user.id
 
 
 def test_get_tasks_by_user_id(test_db, test_user: UserModel):
@@ -118,8 +117,12 @@ def test_get_tasks_by_user_id(test_db, test_user: UserModel):
     Testa a função de obter todas as Tasks de um usuário específico.
     """
     # Criar algumas Tasks associadas ao usuário de teste
-    task_data_1 = TaskCreate(title="Test Task 1", description="This is test task 1")
-    task_data_2 = TaskCreate(title="Test Task 2", description="This is test task 2")
+    task_data_1 = TaskCreate(
+        title="Test Task 1", description="This is test task 1", priority="low"
+    )
+    task_data_2 = TaskCreate(
+        title="Test Task 2", description="This is test task 2", priority="high"
+    )
 
     # Criar as Tasks no banco de dados
     create_task(task=task_data_1, user_id=test_user.id, db=test_db)
@@ -140,7 +143,10 @@ def test_delete_task_by_id(test_db, test_user: UserModel):
     """
     # Criar uma Task associada ao usuário de teste
     task_data = TaskCreate(
-        title="Test Task", description="This is a test task", user_id=test_user.id
+        title="Test Task",
+        description="This is a test task",
+        priority="low",
+        user_id=test_user.id,
     )
     task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
 
@@ -162,6 +168,7 @@ def test_update_task(test_db, test_user: UserModel):
     task_data = TaskCreate(
         title="Test Task",
         description="This is a test task",
+        priority="low",
         user_id=test_user.id,  # Relaciona a task com o usuário de teste
     )
     task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
@@ -170,15 +177,12 @@ def test_update_task(test_db, test_user: UserModel):
     task_data_update = TaskUpdate(
         title="Updated Task",
         description="This is an updated task",
+        priority="high",
         status="done",
     )
     task_updated = update_task(
         task_id=task_created.id, task=task_data_update, db=test_db
     )
-
-    # Verifica se a Task foi atualizada corretamente
-    assert task_updated.title == task_data_update.title
-    assert task_updated.description == task_data_update.description
 
     # Verifica se a Task foi atualizada no banco de dados
     task_in_db = (
@@ -187,6 +191,7 @@ def test_update_task(test_db, test_user: UserModel):
     assert task_in_db is not None
     assert task_in_db.title == task_data_update.title
     assert task_in_db.description == task_data_update.description
+    assert task_in_db.priority == task_data_update.priority
     assert task_in_db.status == task_data_update.status
     assert task_in_db.user_id == test_user.id
 
@@ -199,6 +204,7 @@ def test_get_task_by_id(test_db, test_user: UserModel):
     task_data = TaskCreate(
         title="Test Task",
         description="This is a test task",
+        priority="low",
         user_id=test_user.id,  # Relaciona a task com o usuário de teste
     )
     task_created = create_task(task=task_data, user_id=test_user.id, db=test_db)
@@ -210,4 +216,5 @@ def test_get_task_by_id(test_db, test_user: UserModel):
     assert task is not None
     assert task.title == task_data.title
     assert task.description == task_data.description
+    assert task.priority == task_data.priority
     assert task.user_id == test_user.id
