@@ -7,6 +7,7 @@ class TaskCreate(BaseModel):
     title: str
     description: str
     priority: str
+    deadline: Optional[datetime] = None
 
 
 class TaskResponse(BaseModel):
@@ -15,6 +16,7 @@ class TaskResponse(BaseModel):
     description: str
     status: str
     priority: str
+    deadline: Optional[datetime] = None
     created_at: datetime
 
 
@@ -23,3 +25,4 @@ class TaskUpdate(BaseModel):
     description: str
     status: str
     priority: str
+    deadline: Optional[datetime] = None
