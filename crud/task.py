@@ -72,6 +72,7 @@ def update_task(task_id: str, task: TaskUpdate, db: Session = Depends(get_db)):
     task_db.title = task.title
     task_db.description = task.description
     task_db.status = task.status
+    task_db.priority = task.priority
     db.commit()
     db.refresh(task_db)
     return task_db
