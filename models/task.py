@@ -18,7 +18,7 @@ class Task(Base):
     created_at = Column(
         DateTime(timezone=True),
         index=True,
-        default=datetime.datetime.now(),
+        default=datetime.datetime.utcnow,
         nullable=False,
     )
     user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
