@@ -55,6 +55,7 @@ def test_create_new_task(mock_jwt_bearer, mock_create_task, mock_get_user_by_use
     task_data = {
         "title": "Test Task",
         "description": "Test Description",
+        "category": "test",
         "priority": 3,
     }
 
@@ -62,6 +63,7 @@ def test_create_new_task(mock_jwt_bearer, mock_create_task, mock_get_user_by_use
         id="1",
         title="Test Task",
         description="Test Description",
+        category="test",
         status="todo",
         priority=3,
         created_at=datetime.datetime.now(),
@@ -84,6 +86,7 @@ def test_create_new_task(mock_jwt_bearer, mock_create_task, mock_get_user_by_use
     assert task_created["id"] == mock_task.id
     assert task_created["title"] == task_data["title"]
     assert task_created["description"] == task_data["description"]
+    assert task_created["category"] == task_data["category"]
     assert task_created["status"] == "todo"
     assert task_created["priority"] == task_data["priority"]
     assert task_created["created_at"] == mock_task.created_at.isoformat()
@@ -104,6 +107,7 @@ def test_create_new_task_user_not_found(mock_jwt_bearer, mock_get_user_by_userna
     task_data = {
         "title": "Test Task",
         "description": "Test Description",
+        "category": "test",
         "priority": 3,
     }
 
@@ -143,6 +147,7 @@ def test_create_new_task_internal_server_error(
     task_data = {
         "title": "Test Task",
         "description": "Test Description",
+        "category": "test",
         "priority": 3,
     }
 
@@ -181,6 +186,7 @@ def test_create_new_task_value_error(
     task_data = {
         "title": "",  # Example of invalid data that could trigger a ValueError
         "description": "Test Description",
+        "category": "test",
         "priority": 23423,  # Example of an invalid priority
     }
 
@@ -225,6 +231,7 @@ def test_get_tasks_by_user(
         id="1",
         title="Task 1",
         description="Description 1",
+        category="test",
         status="todo",
         priority=3,
         created_at=datetime.datetime.now(),
@@ -233,6 +240,7 @@ def test_get_tasks_by_user(
         id="2",
         title="Task 2",
         description="Description 2",
+        category="test",
         status="todo",
         priority=1,
         created_at=datetime.datetime.now(),
@@ -250,10 +258,12 @@ def test_get_tasks_by_user(
     assert len(tasks) == 2
     assert tasks[0]["title"] == mock_task1.title
     assert tasks[0]["description"] == mock_task1.description
+    assert tasks[0]["category"] == mock_task1.category
     assert tasks[0]["status"] == mock_task1.status
     assert tasks[0]["priority"] == mock_task1.priority
     assert tasks[1]["title"] == mock_task2.title
     assert tasks[1]["description"] == mock_task2.description
+    assert tasks[1]["category"] == mock_task2.category
     assert tasks[1]["status"] == mock_task2.status
     assert tasks[1]["priority"] == mock_task2.priority
 
@@ -322,6 +332,7 @@ def test_update_task_success(mock_jwt_bearer, mock_update_task, mock_get_task_by
     updated_task_data = {
         "title": "Updated Task",
         "description": "Updated Description",
+        "category": "test",
         "status": "done",
         "priority": 3,
     }
@@ -330,6 +341,7 @@ def test_update_task_success(mock_jwt_bearer, mock_update_task, mock_get_task_by
         id=task_id,
         title="Updated Task",
         description="Updated Description",
+        category="test",
         status="done",
         priority=3,
         created_at=datetime.datetime.now(),
@@ -354,6 +366,7 @@ def test_update_task_success(mock_jwt_bearer, mock_update_task, mock_get_task_by
     assert updated_task["id"] == mock_task.id
     assert updated_task["title"] == updated_task_data["title"]
     assert updated_task["description"] == updated_task_data["description"]
+    assert updated_task["category"] == updated_task_data["category"]
     assert updated_task["status"] == updated_task_data["status"]
     assert updated_task["priority"] == updated_task_data["priority"]
 
@@ -371,6 +384,7 @@ def test_update_task_not_found(mock_jwt_bearer, mock_update_task):
     updated_task_data = {
         "title": "Updated Task",
         "description": "Updated Description",
+        "category": "test",
         "status": "done",
         "priority": 3,
     }
@@ -402,6 +416,7 @@ def test_update_task_internal_server_error(mock_jwt_bearer, mock_update_task):
     updated_task_data = {
         "title": "Updated Task",
         "description": "Updated Description",
+        "category": "test",
         "status": "done",
         "priority": 3,
     }
@@ -440,6 +455,7 @@ def test_update_task_value_error(
     updated_task_data = {
         "title": "",  # Example of invalid data that could trigger a ValueError
         "description": "Updated Description",
+        "category": "test",
         "status": "invalid_status",  # Example of an invalid status
         "priority": 3,
     }

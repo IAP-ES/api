@@ -12,6 +12,7 @@ class Task(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     title = Column(String(50), nullable=False)
     description = Column(String(200))
+    category = Column(String(50), nullable=False, default="General")
     status = Column(String(6), default="todo", nullable=False)
     priority = Column(Integer, nullable=False)
     deadline = Column(DateTime(timezone=True), nullable=True)
